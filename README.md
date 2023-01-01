@@ -1,5 +1,5 @@
 # hkxconv
-a tool for convert hkx to xml
+a tool for convert skyrim SE hkx to xml 
 
 ```
 Description:
