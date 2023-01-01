@@ -1,0 +1,3 @@
+[submodule "HKX2Library"]
+	path = HKX2Library
+	url = git@github.com:ret2end/HKX2Library.git
