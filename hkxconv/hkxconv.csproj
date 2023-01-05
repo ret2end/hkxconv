@@ -12,14 +12,14 @@
     <PackageProjectUrl>https://github.com/ret2end/hkxconv</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/ret2end/hkxconv.git</RepositoryUrl>
-    <PackageReleaseNotes>v0.0.1-alpha</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.0.2-alpha</PackageReleaseNotes>
     <Authors>ret2end</Authors>
     <Title>hkx converter</Title>
-    <Version>0.0.1-alpha</Version>
+    <Version>0.0.2-alpha</Version>
     <Description>tool for convert se hkx to xml</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyTitle>hkx converter</AssemblyTitle>
-    <AssemblyVersion>0.0.1</AssemblyVersion>
+    <AssemblyVersion>0.0.2</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
