@@ -13,6 +13,7 @@ namespace hkxconv
 
             var convertFormatOpt = new Option<ConvertFormat>(name: "-v", description: "Convert format.", getDefaultValue: () => ConvertFormat.xml);
             var verboseOpt = new Option<bool>(name: "--verbose", description: "verbose", getDefaultValue: () => false);
+            //var ignoreErrorOpt = new Option<bool>(name: "--quiet", description: "ingore non-fatal error(content will be different from original)", getDefaultValue: () => false);
             var inputDirArg = new Argument<FileSystemInfo>("Input dir or file");
             var outputDirArg = new Argument<FileSystemInfo>("Output dir or file", getDefaultValue: () => new DirectoryInfo("."));
 
@@ -20,6 +21,7 @@ namespace hkxconv
             {
                 convertFormatOpt,
                 verboseOpt,
+                //ignoreErrorOpt,
                 inputDirArg,
                 outputDirArg,
             };
@@ -28,7 +30,7 @@ namespace hkxconv
 
             convertCommand.SetHandler((format, verbose, input, output) =>
             {
-                cmd.Convert.ToFormat(input, output, format, verbose);
+                cmd.Convert.ToFormat(input, output, format, verbose, false);
             }, convertFormatOpt, verboseOpt, inputDirArg, outputDirArg);
 
             return await rootCommand.InvokeAsync(args);

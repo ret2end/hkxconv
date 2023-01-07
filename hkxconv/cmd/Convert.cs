@@ -5,12 +5,12 @@ namespace hkxconv.cmd
     public enum ConvertFormat
     {
         xml = 0,
-        //amd64 = 1,
+        hkx = 1,
         //win32 = 2,
     }
     public class Convert
     {
-        public static int ToFormat(FileSystemInfo input, FileSystemInfo output, ConvertFormat format, bool verbose)
+        public static int ToFormat(FileSystemInfo input, FileSystemInfo output, ConvertFormat format, bool verbose, bool ignoreError)
         {
             if (!input.Exists)
             {
@@ -21,13 +21,13 @@ namespace hkxconv.cmd
             switch ((input, output))
             {
                 case (FileInfo inFile, FileInfo outFile):
-                    retCode = ConvertHKX(inFile, outFile, format, verbose);
+                    retCode = ConvertTo(inFile, outFile, format, verbose, ignoreError);
                     break;
                 case (FileInfo inFile, DirectoryInfo outDir):
-                    retCode = ConvertHKX(inFile, outDir, format, verbose);
+                    retCode = TraverseDir(inFile, outDir, format, verbose, ignoreError);
                     break;
                 case (DirectoryInfo inDir, DirectoryInfo outDir):
-                    retCode = ConvertHKX(inDir, outDir, format, verbose);
+                    retCode = TraverseDir(inDir, outDir, format, verbose, ignoreError);
 
                     break;
                 default:
@@ -36,19 +36,19 @@ namespace hkxconv.cmd
             return retCode;
         }
 
-        public static int ConvertHKX(DirectoryInfo inDir, DirectoryInfo outDir, ConvertFormat format, bool verbose)
+        public static int TraverseDir(DirectoryInfo inDir, DirectoryInfo outDir, ConvertFormat format, bool verbose, bool ignoreError)
         {
             if (!outDir.Exists)
                 Directory.CreateDirectory(outDir.Name);
 
             int retCode;
-            foreach (var item in Directory.EnumerateFiles(inDir.ToString(), "*.hkx", SearchOption.AllDirectories))
+            foreach (var item in Directory.EnumerateFiles(inDir.ToString(), "*", SearchOption.AllDirectories))
             {
                 var relativePath = Path.GetRelativePath(inDir.FullName, item);
                 var inFile = new FileInfo(Path.Combine(inDir.ToString(), relativePath));
                 var outFile = new FileInfo(Path.Combine(outDir.ToString(), Path.ChangeExtension(relativePath, format.ToString())));
 
-                retCode = ConvertHKX(inFile, outFile, format, verbose);
+                retCode = ConvertTo(inFile, outFile, format, verbose, ignoreError);
                 if (retCode != 0)
                 {
                     return retCode;
@@ -58,17 +58,18 @@ namespace hkxconv.cmd
             return 0;
         }
 
-        public static int ConvertHKX(FileInfo inFile, DirectoryInfo outDir, ConvertFormat format, bool verbose)
+        public static int TraverseDir(FileInfo inFile, DirectoryInfo outDir, ConvertFormat format, bool verbose, bool ignoreError)
         {
             if (!outDir.Exists)
                 Directory.CreateDirectory(outDir.Name);
 
             var outFile = new FileInfo(Path.Combine(outDir.ToString(), Path.ChangeExtension(inFile.Name, format.ToString())));
-            return ConvertHKX(inFile, outFile, format, verbose);
+            return ConvertTo(inFile, outFile, format, verbose, ignoreError);
         }
 
-        public static int ConvertHKX(FileInfo inFile, FileInfo outFile, ConvertFormat format, bool verbose)
+        public static int ConvertTo(FileInfo inFile, FileInfo outFile, ConvertFormat format, bool verbose, bool ignoreError)
         {
+
             if (verbose)
                 Console.WriteLine($"Convert {inFile} to {outFile}");
             if (!outFile.Exists)
@@ -80,16 +81,30 @@ namespace hkxconv.cmd
             HKXHeader header = (format) switch
             {
                 ConvertFormat.xml => HKXHeader.SkyrimSE(),
+                ConvertFormat.hkx => HKXHeader.SkyrimSE(),
                 _ => throw new NotImplementedException("no format found"),
             };
 
-            var br = new BinaryReaderEx(inFile.OpenRead());
-            var des = new PackFileDeserializer();
-            IHavokObject rootObject = des.Deserialize(br);
+            if (format == ConvertFormat.xml && Path.HasExtension(".hkx"))
+            {
+                var br = new BinaryReaderEx(inFile.OpenRead());
+                var des = new PackFileDeserializer();
+                IHavokObject rootObject = des.Deserialize(br, ignoreError);
 
-            var xs = new XmlSerializer();
+                var xs = new XmlSerializer();
+                xs.Serialize(rootObject, header, outFile.Create());
+                return 0;
+            }
+            else if (format == ConvertFormat.hkx && Path.HasExtension(".xml"))
+            {
+                var xd = new XmlDeserializer();
+                IHavokObject rootObject = xd.Deserialize(inFile.OpenRead(), header);
 
-            xs.Serialize(rootObject, header, outFile.Create());
+                var bw = new BinaryWriterEx(outFile.Create());
+                var s = new PackFileSerializer();
+                s.Serialize(rootObject, bw, header);
+                return 0;
+            }
 
             return 0;
         }
