@@ -6,7 +6,6 @@ namespace hkxconv.cmd
     {
         xml = 0,
         hkx = 1,
-        //win32 = 2,
     }
     public class Convert
     {
@@ -98,7 +97,7 @@ namespace hkxconv.cmd
             else if (format == ConvertFormat.hkx && Path.HasExtension(".xml"))
             {
                 var xd = new XmlDeserializer();
-                IHavokObject rootObject = xd.Deserialize(inFile.OpenRead(), header);
+                IHavokObject rootObject = xd.Deserialize(inFile.OpenRead(), header, ignoreError);
 
                 var bw = new BinaryWriterEx(outFile.Create());
                 var s = new PackFileSerializer();
